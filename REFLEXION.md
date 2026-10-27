@@ -6,7 +6,7 @@
 
 | # | Entregable | Link |
 |---|---|---|
-| 1 | Repo | https://github.com/xxMeDuzaa/practica-firebase-cicd |
+| 1 | Repo | https://github.com/xxMeDuzaa/TP9_pa |
 | 2 | Producción | https://practica-ci-cd.web.app |
 | 3 | PR mergeado con comentario del bot | https://github.com/xxMeDuzaa/practica-firebase-cicd/pull/2 |
 
