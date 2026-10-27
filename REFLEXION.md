@@ -271,7 +271,7 @@ No usé `https://*.googleapis.com` porque ese comodín abre cientos de APIs de G
 |---|---|---|
 | 1 | `lib/resenas.ts`, `ResenasCurso.tsx`, `firestore.rules`, `firestore.indexes.json` y `tests/` | En curso (rama `feat/firestore`) |
 | 2 | Salida de `npm run test:reglas` y prueba de "hacerlo fallar" | Abajo |
-| 3 | Tiempo real entre dos navegadores | Pendiente |
+| 3 | Tiempo real entre dos navegadores | Abajo |
 | 4 | PR mergeado con reglas, índice y CSP | Pendiente |
 | 5 | Reflexión | Abajo |
 
@@ -288,6 +288,18 @@ Las líneas `PERMISSION_DENIED` que aparecen en el medio no son errores: son las
 ![Test de puntaje fallando con la regla <= 6](docs/capturas/p4-tests-rojo.png)
 
 **Nota sobre el script:** el enunciado propone `node --test tests/`, pero Node no acepta una carpeta como argumento de `--test` (falla con `Cannot find module '.../tests'`). Lo cambié por un patrón: `node --test tests/*.test.mjs`.
+
+### Tiempo real entre dos navegadores
+
+Dos sesiones distintas (ventana normal e incógnito, con otra cuenta) mirando las reseñas del mismo curso. Antes de publicar:
+
+![Antes: ninguna de las dos ventanas tiene reseñas](docs/capturas/p4-tiempo-real-1.png)
+
+Se publica desde la izquierda y la reseña aparece en la derecha sin recargar (`onSnapshot`):
+
+![Después: la reseña aparece en las dos ventanas](docs/capturas/p4-tiempo-real-2.png)
+
+**Detalle encontrado al probar:** al borrar una reseña, el promedio quedaba con el valor viejo. La lista se actualiza al instante por la compensación de latencia, pero la consulta de agregación se pedía al servidor antes de que confirmara el borrado. Ahora el resumen se recalcula solo cuando el snapshot no tiene escrituras pendientes (`snap.metadata.hasPendingWrites === false`).
 
 ### Preguntas
 

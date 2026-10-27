@@ -141,3 +141,17 @@ a { color: var(--accent); }
 .alerta { padding: 10px 14px; border-radius: var(--radius); border: 1px solid var(--border); }
 .alerta--ok { background: #ebfbee; border-color: #b2f2bb; color: #2b8a3e; }
 .alerta--error { background: #fff5f5; border-color: #ffc9c9; color: #c92a2a; display: block; }
+
+/* Práctica 4 · Reseñas (Firestore) */
+.resenas { margin-top: 10px; }
+.resenas__panel { display: flex; flex-direction: column; gap: 8px; margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--border); }
+.resenas__resumen { font-weight: 600; margin: 0; }
+.resenas__filtro { font-size: 0.9rem; color: var(--muted); }
+.resenas__form { display: flex; flex-direction: column; gap: 6px; }
+.resenas__form select,
+.resenas__form textarea { font: inherit; padding: 6px 8px; border-radius: var(--radius); border: 1px solid var(--border); background: var(--surface); color: var(--text); }
+.resenas__form textarea { resize: vertical; }
+.resenas__botones { display: flex; gap: 8px; }
+.resenas__lista { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; font-size: 0.9rem; }
+.resena__estrellas { color: var(--accent); letter-spacing: 1px; }
+.resena--pendiente { opacity: 0.6; }
