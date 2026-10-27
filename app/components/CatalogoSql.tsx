@@ -6,6 +6,7 @@ import type { Curso } from "@/lib/cursos";
 import { inscribirme, listarCursos, mensajeDeError, misInscripciones } from "@/lib/sqlconnect";
 import { useUsuario } from "@/lib/useUsuario";
 import FiltroCursos from "./FiltroCursos";
+import ResenasCurso from "./ResenasCurso";
 
 type Estado = { tipo: "cargando" } | { tipo: "error"; mensaje: string } | { tipo: "ok"; cursos: Curso[] };
 
@@ -66,17 +67,21 @@ export default function CatalogoSql() {
       )}
       <FiltroCursos
         cursos={estado.cursos}
-        accion={(c) =>
-          usuario && inscriptos.has(c.id) ? (
-            <small className="hint">✔ Ya estás inscripto/a</small>
-          ) : usuario ? (
-            <button type="button" className="button button--small" disabled={enCurso === c.id} onClick={() => onInscribirme(c)}>
-              {enCurso === c.id ? "Inscribiendo…" : "Inscribirme"}
-            </button>
-          ) : (
-            <small className="hint">Ingresá para inscribirte</small>
-          )
-        }
+        accion={(c) => (
+          <>
+            {usuario && inscriptos.has(c.id) ? (
+              <small className="hint">✔ Ya estás inscripto/a</small>
+            ) : usuario ? (
+              <button type="button" className="button button--small" disabled={enCurso === c.id} onClick={() => onInscribirme(c)}>
+                {enCurso === c.id ? "Inscribiendo…" : "Inscribirme"}
+              </button>
+            ) : (
+              <small className="hint">Ingresá para inscribirte</small>
+            )}
+            {/* Práctica 4: reseñas en tiempo real (Firestore) */}
+            <ResenasCurso cursoId={c.id} uid={usuario?.uid ?? null} />
+          </>
+        )}
       />
     </>
   );

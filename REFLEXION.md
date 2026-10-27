@@ -259,3 +259,58 @@ La CSP de la clase 1 tenía `connect-src 'self'`: el navegador solo permitía `f
 - `https://firebasedataconnect.googleapis.com`: SQL Connect (ejecutar las queries y mutations).
 
 No usé `https://*.googleapis.com` porque ese comodín abre cientos de APIs de Google (Drive, Storage, Gmail...). Si un atacante lograra inyectar un script en la página, podría mandar los datos robados a un recurso suyo en alguna de esas APIs y la CSP no lo frenaría. `connect-src` es la última barrera contra la exfiltración de datos: cuanto más exacta la lista, menos salidas tiene un script malicioso. Además, una lista exacta documenta con qué servicios habla la app.
+
+
+---
+
+## Práctica 4 · Firestore
+
+### Entregables
+
+| # | Entregable | Estado |
+|---|---|---|
+| 1 | `lib/resenas.ts`, `ResenasCurso.tsx`, `firestore.rules`, `firestore.indexes.json` y `tests/` | En curso (rama `feat/firestore`) |
+| 2 | Salida de `npm run test:reglas` y prueba de "hacerlo fallar" | Abajo |
+| 3 | Tiempo real entre dos navegadores | Abajo |
+| 4 | PR mergeado con reglas, índice y CSP | Pendiente |
+| 5 | Reflexión | Abajo |
+
+### Tests de reglas · `npm run test:reglas`
+
+**Los 8 tests en verde** contra el emulador de Firestore:
+
+![Los 8 tests de reglas pasando](docs/capturas/p4-tests-verde.png)
+
+Las líneas `PERMISSION_DENIED` que aparecen en el medio no son errores: son las escrituras que las reglas rechazan (reseña a nombre de otro, puntaje 6, campo extra...), y el test pasa justamente porque esperaba ese rechazo.
+
+**Hacerlo fallar a propósito:** cambié en `firestore.rules` `d.puntaje <= 5` por `d.puntaje <= 6`. El test *"puntaje fuera de rango o con decimales se rechaza"* se puso en rojo (`pass 7`, `fail 1`, *Expected request to fail, but it succeeded*), lo que demuestra que ese test realmente prueba el límite del puntaje. Después volví a `<= 5` y los 8 quedaron en verde otra vez.
+
+![Test de puntaje fallando con la regla <= 6](docs/capturas/p4-tests-rojo.png)
+
+**Nota sobre el script:** el enunciado propone `node --test tests/`, pero Node no acepta una carpeta como argumento de `--test` (falla con `Cannot find module '.../tests'`). Lo cambié por un patrón: `node --test tests/*.test.mjs`.
+
+### Tiempo real entre dos navegadores
+
+Dos sesiones distintas (ventana normal e incógnito, con otra cuenta) mirando las reseñas del mismo curso. Antes de publicar:
+
+![Antes: ninguna de las dos ventanas tiene reseñas](docs/capturas/p4-tiempo-real-1.png)
+
+Se publica desde la izquierda y la reseña aparece en la derecha sin recargar (`onSnapshot`):
+
+![Después: la reseña aparece en las dos ventanas](docs/capturas/p4-tiempo-real-2.png)
+
+**Detalle encontrado al probar:** al borrar una reseña, el promedio quedaba con el valor viejo. La lista se actualiza al instante por la compensación de latencia, pero la consulta de agregación se pedía al servidor antes de que confirmara el borrado. Ahora el resumen se recalcula solo cuando el snapshot no tiene escrituras pendientes (`snap.metadata.hasPendingWrites === false`).
+
+### Preguntas
+
+#### 1. ¿Por qué el id del documento es el UID? ¿Qué agregarías si usaras ids aleatorios con `addDoc`?
+
+#### 2. ¿Qué ganás y qué perdés al copiar el nombre del autor? ¿Cómo resolverías el cambio de nombre?
+
+#### 3. ¿Qué diferencia hay entre `resource.data` y `request.resource.data`?
+
+#### 4. ¿Por qué la creación exige `creadaEn == request.time`?
+
+#### 5. ¿Qué limitación tiene `getAggregateFromServer` y qué alternativas hay?
+
+#### 6. Inscripciones con cupo máximo: ¿Firestore o SQL Connect?

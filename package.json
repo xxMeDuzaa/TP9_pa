@@ -9,17 +9,19 @@
     "typecheck": "tsc --noEmit",
     "serve": "firebase emulators:start --only hosting",
     "deploy:preview": "firebase hosting:channel:deploy local-test --expires 1d",
-    "emulators": "firebase emulators:start --only auth,dataconnect",
+    "emulators": "firebase emulators:start --only auth,dataconnect,firestore",
     "seed": "node scripts/seed.mjs",
-    "atacar": "node scripts/atacar.mjs"
+    "atacar": "node scripts/atacar.mjs",
+    "test:reglas": "firebase emulators:exec --only firestore \"node --test tests/*.test.mjs\""
   },
   "dependencies": {
+    "firebase": "^13.1.0",
     "next": "16.4.2",
     "react": "19.3.1",
-    "react-dom": "19.3.1",
-    "firebase": "^13.1.0"
+    "react-dom": "19.3.1"
   },
   "devDependencies": {
+    "@firebase/rules-unit-testing": "^6.0.0",
     "@types/node": "^22",
     "@types/react": "^19",
     "@types/react-dom": "^19",
