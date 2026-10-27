@@ -269,10 +269,10 @@ No usé `https://*.googleapis.com` porque ese comodín abre cientos de APIs de G
 
 | # | Entregable | Estado |
 |---|---|---|
-| 1 | `lib/resenas.ts`, `ResenasCurso.tsx`, `firestore.rules`, `firestore.indexes.json` y `tests/` | En curso (rama `feat/firestore`) |
+| 1 | `lib/resenas.ts`, `ResenasCurso.tsx`, `firestore.rules`, `firestore.indexes.json` y `tests/` | https://github.com/xxMeDuzaa/TP9_pa/tree/main |
 | 2 | Salida de `npm run test:reglas` y prueba de "hacerlo fallar" | Abajo |
 | 3 | Tiempo real entre dos navegadores | Abajo |
-| 4 | PR mergeado con reglas, índice y CSP | Pendiente |
+| 4 | PR mergeado con reglas, índice y CSP | https://github.com/xxMeDuzaa/TP9_pa/pull/4 · preview: https://practica-ci-cd--pr4-feat-firestore-xhy13ia5.web.app/ · producción: https://practica-ci-cd.web.app/ |
 | 5 | Reflexión | Abajo |
 
 ### Tests de reglas · `npm run test:reglas`
@@ -304,13 +304,19 @@ Se publica desde la izquierda y la reseña aparece en la derecha sin recargar (`
 ### Preguntas
 
 #### 1. ¿Por qué el id del documento es el UID? ¿Qué agregarías si usaras ids aleatorios con `addDoc`?
+El id del documento es el UID porque así cada usuario tiene una sola ruta posible por curso (`cursos/{cursoId}/resenas/{uid}`): si escribe de nuevo, se actualiza la misma reseña en lugar de crear otra, y la regla de seguridad solo tiene que comparar el id con `request.auth.uid`. Si usara `addDoc`, el id ya no diría quién es el autor, así que tendría que guardar un campo `autorUid` y validar en las reglas que coincida con `request.auth.uid` al crear, editar y borrar. En conclusión, usar el UID como id hace que la regla de "una reseña por persona" la cumpla la estructura de los datos, sin código extra.
 
 #### 2. ¿Qué ganás y qué perdés al copiar el nombre del autor? ¿Cómo resolverías el cambio de nombre?
+Al copiar el nombre en la reseña gano que, para mostrar la lista, no tengo que hacer una lectura extra por cada reseña para buscar el nombre, ya que Firestore no tiene JOIN. Lo que pierdo es que el dato queda duplicado: si alguien cambia su nombre, sus reseñas viejas siguen mostrando el anterior. Para resolverlo, cuando el usuario cambia su nombre habría que actualizar el campo `autor` en todas sus reseñas, idealmente desde el servidor para no depender del cliente. En conclusión, la desnormalización conviene cuando un dato se lee mucho y cambia poco, como el nombre de una persona.
 
 #### 3. ¿Qué diferencia hay entre `resource.data` y `request.resource.data`?
+`resource.data` es el documento como está guardado antes de la operación, mientras que `request.resource.data` es cómo quedaría después si se permite la escritura. Nuestra regla de `update` usa los dos para que la fecha no se pueda cambiar: exige `request.resource.data.creadaEn == resource.data.creadaEn`, es decir, que la fecha del documento resultante sea la misma que la que ya estaba guardada. En conclusión, comparar el antes con el después permite validar cambios y no solo el estado final.
 
 #### 4. ¿Por qué la creación exige `creadaEn == request.time`?
+La creación exige esa condición porque la fecha del cliente no es confiable: la computadora puede tener mal la hora o alguien puede mandar una fecha inventada a propósito. `request.time` es la hora del servidor, y `serverTimestamp()` hace que sea el servidor quien complete la fecha; si el cliente manda otra, la escritura se rechaza, como comprueba uno de los tests. En conclusión, los datos que tienen que ser confiables los pone el servidor, no el cliente.
 
 #### 5. ¿Qué limitación tiene `getAggregateFromServer` y qué alternativas hay?
+`getAggregateFromServer` no funciona en tiempo real ni offline: devuelve el resultado del momento en que se pide, por eso la lista de reseñas se actualiza sola pero el promedio no, y hay que volver a pedirlo. Lo vimos al probar: después de borrar una reseña, la lista quedó vacía pero el promedio siguió mostrando 4.0 hasta que corregimos cuándo se recalcula. Una alternativa es guardar el promedio y la cantidad en el documento del curso y escucharlo con `onSnapshot`, actualizándolo desde el servidor. En conclusión, la agregación sirve para un resumen puntual, pero si se necesita en tiempo real hay que guardarlo como dato.
 
 #### 6. Inscripciones con cupo máximo: ¿Firestore o SQL Connect?
+Para inscripciones con cupo usaría SQL Connect, porque el cupo depende de contar cuántas inscripciones tiene un curso, y una base relacional puede hacerlo dentro de una transacción. Además, en la clase 2 la clave compuesta alumno + curso de `Matricula` ya impide inscribirse dos veces. En Firestore, las reglas validan un documento por vez y no pueden contar, así que tendría que mantener un contador aparte y sería más fácil equivocarse. En conclusión, Firestore conviene para datos en tiempo real como las reseñas, y SQL Connect para datos con reglas de integridad como las inscripciones con cupo.
