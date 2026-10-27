@@ -148,10 +148,10 @@ Después del rollback en la consola, `live` sirve la versión anterior pero `mai
 
 | # | Entregable | Estado |
 |---|---|---|
-| 1 | `dataconnect/` completo (L1–L4 + L5) | Rama `feat/sql-connect` |
+| 1 | `dataconnect/` completo (L1–L4 + L5) | https://github.com/xxMeDuzaa/TP9_pa/tree/main/dataconnect |
 | 2 | Salida de `npm run atacar` antes y después | Abajo |
-| 3 | PR mergeado con el cambio de CSP (L6) | _pendiente_ |
-| 4 | Producción con inscripción (L7) | _pendiente_ |
+| 3 | PR mergeado con el cambio de CSP (L6) | https://github.com/xxMeDuzaa/TP9_pa/pull/1 · preview: https://practica-ci-cd--pr1-feat-sql-connect-yhslkigz.web.app/ |
+| 4 | Producción con inscripción (L7) | https://practica-ci-cd.web.app/ |
 | 5 | Reflexión | Abajo |
 
 ## Auditoría · `npm run atacar`
