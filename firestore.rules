@@ -1,0 +1,51 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ── Funciones auxiliares ──────────────────────────────────────────────
+    function autenticado() {
+      return request.auth != null;
+    }
+
+    function esDuenio(uid) {
+      return autenticado() && request.auth.uid == uid;
+    }
+
+    // Lista blanca de campos, tipos y rangos. Todo lo que no está acá, se rechaza.
+    function resenaValida() {
+      let d = request.resource.data;
+      return d.keys().hasOnly(['puntaje', 'texto', 'autor', 'creadaEn'])
+        && d.keys().hasAll(['puntaje', 'texto', 'autor', 'creadaEn'])
+        && d.puntaje is int && d.puntaje >= 1 && d.puntaje <= 5
+        && d.texto is string && d.texto.size() <= 500
+        && d.autor is string && d.autor.size() <= 80;
+    }
+
+    // ── Cursos: solo lectura desde el cliente ─────────────────────────────
+    match /cursos/{cursoId} {
+      allow read: if true;
+      allow write: if false;
+
+      // ── Reseñas: el id del documento es el UID del autor ────────────────
+      match /resenas/{uid} {
+        allow read: if true;
+
+        allow create: if esDuenio(uid)
+          && resenaValida()
+          && request.resource.data.creadaEn == request.time;            // la fecha la pone el servidor
+
+        allow update: if esDuenio(uid)
+          && resenaValida()
+          && request.resource.data.creadaEn == resource.data.creadaEn;  // inmutable
+
+        allow delete: if esDuenio(uid);
+      }
+    }
+
+    // Todo lo demás: cerrado.
+    match /{documento=**} {
+      allow read, write: if false;
+    }
+  }
+}
