@@ -1,0 +1,53 @@
+# ─────────────────────────────────────────────────────────────────────────────
+#  Esquema relacional. Cada `type ... @table` se convierte en una tabla de PostgreSQL.
+#  SQL Connect genera además, para cada tabla, queries y mutations "implícitas"
+#  (cursos, curso, curso_insert, curso_upsert, curso_delete, ...).
+# ─────────────────────────────────────────────────────────────────────────────
+
+# Curso: clave primaria UUID generada automáticamente (columna `id`).
+type Curso @table {
+  titulo: String! @col(dataType: "varchar(120)")
+  nivel: String! @col(dataType: "varchar(20)")
+  horas: Int!
+  descripcion: String!
+  cupo: Int!
+}
+
+# Alumno: la clave primaria es el UID de Firebase Auth.
+# `@default(expr: "auth.uid")` hace que, al insertar, el servidor complete el id
+# con el usuario autenticado: el cliente no puede elegirlo.
+type Alumno @table {
+  id: String! @default(expr: "auth.uid")
+  nombre: String! @col(dataType: "varchar(80)")
+  email: String!
+}
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  TODO L1: Modelá la relación muchos-a-muchos entre Alumno y Curso.
+#
+#  Requisitos:
+#   - Una tabla intermedia llamada `Matricula` (una fila = un alumno inscripto en un curso).
+#   - Clave primaria compuesta por el alumno y el curso: un alumno no puede
+#     inscribirse dos veces al mismo curso.
+#   - Un campo `fecha` de tipo Timestamp que el servidor complete solo con la
+#     hora del request.
+#
+#  Pistas:
+#   - Un campo `alumno: Alumno!` crea la clave foránea `alumnoId` automáticamente.
+#   - Clave compuesta: @table(key: ["campoA", "campoB"])
+#   - Valor por defecto del servidor: @default(expr: "request.time")
+#
+#  ¿Por qué `Matricula` y no `Inscripcion`? SQL Connect arma el plural agregando
+#  una "s" (curso → cursos). "inscripcions" quedaría mal; "matriculas" no.
+# ─────────────────────────────────────────────────────────────────────────────
+
+# Matricula: tabla intermedia Alumno <-> Curso (muchos-a-muchos).
+# - `alumno` y `curso` generan las claves foráneas alumnoId y cursoId.
+# - La clave primaria compuesta (alumno, curso) impide inscribirse dos veces al mismo curso:
+#   la regla la garantiza la base de datos, no el código de la app.
+# - `fecha` la completa el servidor con la hora del request; el cliente no puede elegirla.
+type Matricula @table(key: ["alumno", "curso"]) {
+  alumno: Alumno!
+  curso: Curso!
+  fecha: Timestamp! @default(expr: "request.time")
+}

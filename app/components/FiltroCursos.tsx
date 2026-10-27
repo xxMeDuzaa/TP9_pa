@@ -1,11 +1,17 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import type { Curso, Nivel } from "@/lib/cursos";
 
 const niveles: Array<Nivel | "todos"> = ["todos", "inicial", "intermedio", "avanzado"];
 
-export default function FiltroCursos({ cursos }: { cursos: Curso[] }) {
+interface Props {
+  cursos: Curso[];
+  /** Contenido extra al pie de cada tarjeta (por ejemplo, el botón "Inscribirme"). */
+  accion?: (curso: Curso) => ReactNode;
+}
+
+export default function FiltroCursos({ cursos, accion }: Props) {
   const [nivel, setNivel] = useState<Nivel | "todos">("todos");
   const [texto, setTexto] = useState("");
 
@@ -54,7 +60,10 @@ export default function FiltroCursos({ cursos }: { cursos: Curso[] }) {
             <span className={`badge badge--${c.nivel}`}>{c.nivel}</span>
             <h2>{c.titulo}</h2>
             <p>{c.descripcion}</p>
-            <small>{c.horas} horas</small>
+            <small>
+              {c.horas} horas · cupo {c.cupo}
+            </small>
+            {accion && <div className="card__accion">{accion(c)}</div>}
           </li>
         ))}
       </ul>

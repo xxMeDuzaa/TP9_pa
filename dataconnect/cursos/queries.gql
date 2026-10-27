@@ -1,0 +1,79 @@
+# ─────────────────────────────────────────────────────────────────────────────
+#  Queries del conector `cursos`.
+#  Cada operación DEBE declarar quién puede ejecutarla con @auth:
+#    PUBLIC     → cualquiera, incluso sin login (exige justificar con insecureReason)
+#    USER       → cualquier usuario autenticado con Firebase Auth
+#    NO_ACCESS  → nadie desde el cliente (solo herramientas de admin)
+# ─────────────────────────────────────────────────────────────────────────────
+
+# Catálogo: lo puede ver cualquiera.
+query ListCursos @auth(level: PUBLIC, insecureReason: "El catálogo de cursos es información pública.") {
+  cursos(orderBy: { titulo: ASC }) {
+    id
+    titulo
+    nivel
+    horas
+    descripcion
+    cupo
+  }
+}
+
+# ⚠️ Operación heredada de un desarrollador anterior. Se usa en el panel de admin.
+# TODO L4: auditá esta operación. ¿Quién puede ejecutarla? ¿Qué datos devuelve?
+#          Corregila con el nivel de acceso adecuado.
+#
+# Auditoría L4:
+#  - ¿Quién podía ejecutarla? Cualquiera, sin login (PUBLIC).
+#  - ¿Qué devuelve? id, nombre y email de TODOS los alumnos → datos personales.
+#  - Corrección: NO_ACCESS. Ningún cliente (ni anónimo ni logueado) puede ejecutarla.
+#    USER no alcanza: cualquier alumno logueado vería los emails de los demás.
+#    Un panel de admin no usa el SDK del cliente: usa herramientas con privilegios
+#    (Admin SDK, consola, `dataconnect:execute`), que no pasan por @auth.
+#    Mínimo privilegio: la app no usa esta operación, así que no se expone.
+query ListAlumnos @auth(level: NO_ACCESS) {
+  alumnos {
+    id
+    nombre
+    email
+  }
+}
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  TODO L3: Query `MisInscripciones`
+#   - Solo para usuarios autenticados.
+#   - Devuelve los cursos en los que está inscripto EL USUARIO QUE LLAMA
+#     (sin recibir el id del alumno como variable: ¿por qué no?).
+#   - Para cada inscripción: fecha y, del curso, id, titulo, nivel y horas.
+#
+#  Forma esperada de la respuesta (la usa app/mis-inscripciones):
+#   { "alumno": { "nombre": "...", "matriculas": [ { "fecha": "...", "curso": { ... } } ] } }
+#
+#  Pistas:
+#   - Buscar un registro por clave usando el usuario autenticado:
+#       alumno(key: { id_expr: "auth.uid" }) { ... }
+#   - Desde un alumno, sus filas de Matricula se acceden con el campo generado
+#       matriculas_on_alumno
+#     y se le puede poner un alias:  matriculas: matriculas_on_alumno { ... }
+# ─────────────────────────────────────────────────────────────────────────────
+
+# Resolución L3:
+#  - @auth(level: USER): sin login, el servidor rechaza la query.
+#  - alumno(key: { id_expr: "auth.uid" }): el alumno se busca con el UID del token,
+#    nunca con una variable. Si recibiera $alumnoId, cualquier usuario autenticado
+#    podría pasar el id de otro y leer sus inscripciones → IDOR.
+#  - matriculas: matriculas_on_alumno → alias para que la respuesta tenga la forma
+#    que espera la app ({ alumno { nombre matriculas [...] } }).
+query MisInscripciones @auth(level: USER) {
+  alumno(key: { id_expr: "auth.uid" }) {
+    nombre
+    matriculas: matriculas_on_alumno {
+      fecha
+      curso {
+        id
+        titulo
+        nivel
+        horas
+      }
+    }
+  }
+}

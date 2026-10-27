@@ -1,5 +1,4 @@
-import { cursos } from "@/lib/cursos";
-import FiltroCursos from "../components/FiltroCursos";
+import CatalogoSql from "../components/CatalogoSql";
 
 export const metadata = {
   title: "Cursos | Catálogo de Cursos",
@@ -10,10 +9,9 @@ export default function CursosPage() {
     <section>
       <h1>Cursos disponibles</h1>
       <p className="hint">
-        El filtro de abajo es un componente de cliente (necesita JavaScript). Si después de
-        aplicar la CSP deja de funcionar, ya sabés por dónde empezar a investigar.
+        El catálogo ahora se lee de PostgreSQL a través de SQL Connect (query <code>ListCursos</code>).
       </p>
-      <FiltroCursos cursos={cursos} />
+      <CatalogoSql />
     </section>
   );
 }

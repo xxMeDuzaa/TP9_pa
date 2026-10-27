@@ -1,0 +1,20 @@
+
+# This is a file for you to write an un-named query.
+# Only one un-named query is allowed per file.
+query {
+  matriculas{
+    alumno {
+      id
+      nombre
+      email
+    }
+    curso {
+      titulo
+      nivel
+      horas
+      descripcion
+      cupo
+    }
+    fecha
+  }
+}
